@@ -58,7 +58,7 @@ export default {
       days: 'dias'
     },
     topProducts: {
-      title: 'Principais Produtos por Receita',
+      title: 'Top 5 Produtos por Receita',
       sku: 'SKU',
       product: 'Produto',
       category: 'Categoria',
@@ -69,6 +69,9 @@ export default {
       firstOrder: 'Primeiro Pedido',
       inStock: 'Em Estoque',
       lowStock: 'Estoque Baixo'
+    },
+    topProductsChart: {
+      title: 'Top 5 Produtos por Receita (Gráfico)'
     }
   },
 

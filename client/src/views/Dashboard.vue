@@ -271,6 +271,39 @@
             </table>
           </div>
         </div>
+
+        <!-- Top Products by Revenue Chart -->
+        <div class="card chart-card full-width">
+          <div class="card-header">
+            <h3 class="card-title">{{ t('dashboard.topProductsChart.title') }}</h3>
+          </div>
+          <div class="chart-content">
+            <div class="product-bar-chart" v-if="topProductsByRevenue.length > 0">
+              <div
+                v-for="product in topProductsByRevenue"
+                :key="product.sku"
+                class="product-bar-wrapper"
+              >
+                <div class="product-bar-container">
+                  <span class="product-bar-value">
+                    {{ selectedCurrency === 'JPY' ? formatCurrency(product.revenue, selectedCurrency) : `$${(product.revenue / 1000).toFixed(1)}K` }}
+                  </span>
+                  <div
+                    class="product-bar"
+                    :style="{ height: getProductBarHeight(product.revenue) + 'px' }"
+                    :title="translateProductName(product.name) + ': ' + formatCurrency(product.revenue, selectedCurrency)"
+                  ></div>
+                </div>
+                <div class="product-bar-label-wrap">
+                  <div class="product-bar-label" :title="translateProductName(product.name)">
+                    {{ translateProductName(product.name) }}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-else class="no-data">{{ t('dashboard.inventoryShortages.noData') }}</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -486,8 +519,8 @@ export default {
       return Math.max(10, Math.ceil(max / 10) * 10)
     })
 
-    const topProducts = computed(() => {
-      // Calculate top products from filtered order data
+    const productAggregates = computed(() => {
+      // Calculate product aggregates from filtered order data (unsorted/unsliced)
       const productMap = {}
 
       // allOrders is already filtered by API based on: month, warehouse, category, status
@@ -529,21 +562,31 @@ export default {
         }
       })
 
-      // Convert to array, sort by first order date (earliest first = January at top), then by revenue, and take top 12
       return Object.values(productMap)
-        .sort((a, b) => {
-          // Sort by first order date (earliest first)
-          // This ensures products first ordered in January appear before those first ordered in December
-          const dateA = new Date(a.firstOrderDate || '9999-12-31')
-          const dateB = new Date(b.firstOrderDate || '9999-12-31')
-          if (dateA.getTime() !== dateB.getTime()) {
-            return dateA.getTime() - dateB.getTime() // Earlier dates come first
-          }
-          // If dates are equal, sort by revenue (highest first)
-          return b.revenue - a.revenue
-        })
-        .slice(0, 12)
     })
+
+    const topProductsByRevenue = computed(() => {
+      // Sort strictly by revenue descending, take top 5
+      return productAggregates.value
+        .slice()
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5)
+    })
+
+    const topProducts = computed(() => {
+      // Same top 5 products as the chart, in the same revenue-descending order,
+      // so the table's row order matches the chart's left-to-right bar order.
+      return topProductsByRevenue.value
+    })
+
+    const maxTopProductRevenue = computed(() => {
+      if (topProductsByRevenue.value.length === 0) return 1
+      return Math.max(...topProductsByRevenue.value.map(p => p.revenue))
+    })
+
+    const getProductBarHeight = (revenue) => {
+      return (revenue / maxTopProductRevenue.value) * 180
+    }
 
     const allBacklogItems = ref([])
 
@@ -692,7 +735,11 @@ export default {
       maxCategoryValue,
       orderTrendData,
       maxOrderCount,
+      productAggregates,
       topProducts,
+      topProductsByRevenue,
+      maxTopProductRevenue,
+      getProductBarHeight,
       backlogItems,
       calculatePercentage,
       getCircleSegment,
@@ -996,6 +1043,68 @@ export default {
   font-size: 0.813rem;
   font-weight: 700;
   color: white;
+}
+
+.product-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0;
+  overflow-x: auto;
+}
+
+.product-bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: none;
+  min-width: 150px;
+  max-width: 150px;
+}
+
+.product-bar-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  height: 220px;
+  width: 100%;
+}
+
+.product-bar-value {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+}
+
+.product-bar {
+  width: 100%;
+  max-width: 48px;
+  min-height: 4px;
+  background: linear-gradient(to top, #3b82f6, #60a5fa);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+}
+
+.product-bar-label-wrap {
+  height: 150px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.product-bar-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  white-space: nowrap;
+  transform: rotate(-45deg);
+  /* Anchor at the top-right of the column so the diagonal line reads
+     bottom-left -> top-right, ending right under the bar, matching the
+     fixed-width, non-overlapping column layout. */
+  transform-origin: top right;
 }
 
 .line-chart {

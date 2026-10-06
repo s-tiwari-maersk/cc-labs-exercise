@@ -58,7 +58,7 @@ export default {
       days: '日'
     },
     topProducts: {
-      title: '収益別トップ製品',
+      title: '収益別トップ5製品',
       sku: 'SKU',
       product: '製品',
       category: 'カテゴリ',
@@ -69,6 +69,9 @@ export default {
       firstOrder: '初回注文',
       inStock: '在庫あり',
       lowStock: '在庫僅少'
+    },
+    topProductsChart: {
+      title: '収益別トップ5製品（グラフ）'
     }
   },
 

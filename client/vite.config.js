@@ -4,6 +4,9 @@ import vue from "@vitejs/plugin-vue"
 export default defineConfig({
   plugins: [vue()],
   base: "/dashboard/",
+  test: {
+    environment: "jsdom"
+  },
   server: {
     port: 3000,
     allowedHosts: true,

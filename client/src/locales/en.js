@@ -58,7 +58,7 @@ export default {
       days: 'days'
     },
     topProducts: {
-      title: 'Top Products by Revenue',
+      title: 'Top 5 Products by Revenue',
       sku: 'SKU',
       product: 'Product',
       category: 'Category',
@@ -69,6 +69,9 @@ export default {
       firstOrder: 'First Order',
       inStock: 'In Stock',
       lowStock: 'Low Stock'
+    },
+    topProductsChart: {
+      title: 'Top 5 Products by Revenue (Chart)'
     }
   },
 
